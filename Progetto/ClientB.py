@@ -48,14 +48,14 @@ while True:
             payload = input("-> ")
 
             if payload == "<close>":
-                msg_key = get_msg_key("close")
+                msg_key = get_msg_key("close", key)
                 mess = key_finger + msg_key + "close"
                 conn.sendall(mess.encode("UTF-8"))
                 conn.close()
                 print("Chat chiusa")
                 break
 
-            msg_key = get_msg_key(payload)
+            msg_key = get_msg_key(payload, key)
             mess = key_finger + msg_key + payload
             conn.sendall(mess.encode("UTF-8"))
 
