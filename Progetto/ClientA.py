@@ -41,17 +41,19 @@ while True:
             payload = input("-> ")
 
             if payload == "<close>":
-                msg_key = get_msg_key("close", key)
-                mess = key_finger + msg_key + "close"
-                s.sendall(mess.encode("UTF-8"))
+                msg_key = get_msg_key("close", key).encode()
+                mess = key_finger.encode() + msg_key + encode_msg("close", msg_key, key)
+                s.sendall(mess)
                 s.close()
                 break
 
-            msg_key = get_msg_key(payload, key)
-            mess = key_finger + msg_key + payload
-            s.sendall(mess.encode("UTF-8"))
-            data = s.recv(1024)
-            data = data[48:]
+            # TODO volendo si può fare il check sulla fingerprint
+            msg_key = get_msg_key(payload, key).encode()
+            mess = key_finger.encode() + msg_key + encode_msg(payload, msg_key, key)
+            s.sendall(mess)
+            enc_data = s.recv(1024)
+            data = decode_msg(enc_data[48:], enc_data[16:48], key)
+
             if data.decode("UTF-8") == "close":
                 s.close()
                 print("Chat chiusa da B")

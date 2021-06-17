@@ -1,5 +1,18 @@
+import base64
 from hashlib import sha256, sha1
 import random
+from Cryptodome.Cipher import AES
+
+
+def pad(s):
+    block_size = 16
+    remainder = len(s) % block_size
+    padding_needed = block_size - remainder
+    return s + padding_needed * ' '
+
+
+def unpad(s):
+    return s.rstrip()
 
 
 def get_public_key():
@@ -8,10 +21,6 @@ def get_public_key():
     a = random.randint(2, p - 1)
 
     return pow(g, a, p), a, p
-
-
-def encode_msg(payload):
-    return 0
 
 
 def get_fingerprint(key):
@@ -30,9 +39,34 @@ def get_msg_key(plaintext, key, x=0):
     return msg_key_large[16:48]
 
 
-'''
+def encode_msg(plain_text, msg_key, key, x=0):
+    """
+    metto tutta key perchè è più corta di 32B
     sha256_a = SHA256(msg_key + substr(key, x, 36));
     sha256_b = SHA256(substr(key, 40 + x, 36) + msg_key);
-    aes_key = substr(sha256_a, 0, 8) + substr(sha256_b, 8, 16) + substr(sha256_a, 24, 8);
-    aes_iv = substr(sha256_b, 0, 8) + substr(sha256_a, 8, 16) + substr(sha256_b, 24, 8);
-'''
+    """
+    sha256_a = sha256(msg_key + (str(key)).encode()).digest()
+    sha256_b = sha256(str(key).encode() + msg_key).digest()
+    private_key = sha256_a[0:8] + sha256_b[8:24] + sha256_a[24:32]
+    iv = sha256_b[0:4] + sha256_a[8:16] + sha256_b[24:28]
+    padded_text = pad(plain_text)
+    cipher_config = AES.new(private_key, AES.MODE_CBC, iv)
+
+    return cipher_config.encrypt(padded_text.encode())
+
+
+
+def decode_msg(enc, msg_key, key, x=0):
+    """
+    metto tutta key perchè è più corta di 32B
+    sha256_a = SHA256(msg_key + substr(key, x, 36));
+    sha256_b = SHA256(substr(key, 40 + x, 36) + msg_key);
+    """
+    sha256_a = sha256(msg_key + (str(key)).encode()).digest()
+    sha256_b = sha256(str(key).encode() + msg_key).digest()
+    aes_key = sha256_a[0:8] + sha256_b[8:24] + sha256_a[24:32]
+    aes_iv = sha256_b[0:4] + sha256_a[8:16] + sha256_b[24:28]
+    aes = AES.new(aes_key, AES.MODE_CBC, aes_iv)
+
+    return unpad(aes.decrypt(enc))
+

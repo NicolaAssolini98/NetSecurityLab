@@ -23,7 +23,7 @@ while True:
 
     """ controllo che il messaggio sia rivolto a me e che non sia troppo vecchio """
     if d_list[2] != B_ID or int(d_list[3]) < int(time.time()) - 60:
-        conn.sendall(close_chat())
+        conn.sendall("close".encode())
         conn.close()
         print("Richiesta non valida")
         continue
@@ -37,9 +37,10 @@ while True:
         conn.sendall(chat_accept(B_ID, A_ID, int(time.time()), g_b, key_finger))
         print("Chat segreta aperta, digita <close> per uscire")
         while True:
-            data = conn.recv(1024)
-            data = data[48:]
-            if data.decode("UTF-8") == "close":
+            enc_data = conn.recv(1024)
+            data = decode_msg(enc_data[48:], enc_data[16:48], key)
+
+            if bytes.decode(data) == "close":
                 s.close()
                 print("Chat chiusa da A")
                 break
@@ -48,16 +49,16 @@ while True:
             payload = input("-> ")
 
             if payload == "<close>":
-                msg_key = get_msg_key("close", key)
-                mess = key_finger + msg_key + "close"
-                conn.sendall(mess.encode("UTF-8"))
+                msg_key = get_msg_key("close", key).encode()
+                mess = key_finger.encode() + msg_key + encode_msg("close", msg_key, key)
+                conn.sendall(mess)
                 conn.close()
                 print("Chat chiusa")
                 break
 
-            msg_key = get_msg_key(payload, key)
-            mess = key_finger + msg_key + payload
-            conn.sendall(mess.encode("UTF-8"))
+            msg_key = get_msg_key(payload, key).encode()
+            mess = key_finger.encode() + msg_key + encode_msg(payload, msg_key, key)
+            conn.sendall(mess)
 
     else:
         conn.sendall("close".encode("UTF-8"))
