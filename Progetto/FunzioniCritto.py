@@ -1,4 +1,3 @@
-import base64
 from hashlib import sha256, sha1
 import random
 from Cryptodome.Cipher import AES
@@ -55,7 +54,6 @@ def encode_msg(plain_text, msg_key, key, x=0):
     return cipher_config.encrypt(padded_text.encode())
 
 
-
 def decode_msg(enc, msg_key, key, x=0):
     """
     metto tutta key perchè è più corta di 32B
@@ -69,4 +67,3 @@ def decode_msg(enc, msg_key, key, x=0):
     aes = AES.new(aes_key, AES.MODE_CBC, aes_iv)
 
     return unpad(aes.decrypt(enc))
-

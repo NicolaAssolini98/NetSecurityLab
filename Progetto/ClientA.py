@@ -21,6 +21,7 @@ while True:
     s.connect((B_HOST, B_PORT))
     s.sendall(chat_requested(A_ID, B_ID, int(time.time()), g_a))
     print("Richiesta chat segreta inviata... ")
+
     data = s.recv(1024)
     d_list = read_message(data)
     g_b = int(d_list[4])
@@ -30,7 +31,7 @@ while True:
     if d_list[0] == "accept":
         """ controllo destinatario, data, correttezza chiave """
         if d_list[2] != A_ID or int(d_list[3]) < int(time.time()) - 60 or d_list[5] != key_finger:
-            print(d_list[5] + " ==? " + key_finger)
+            # print(d_list[5] + " ==? " + key_finger)
             s.sendall("close".encode())
             s.close()
             print("Errore risposta")
